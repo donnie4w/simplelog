@@ -1,7 +1,7 @@
 ### simplelog 是golang 的日志库 
 代替github.com/donnie4w/go-logger(该库实现有许多问题，目前没有维护)
 
-**在控制台打印：直接调用 Debug()，Info()，Warn(), Error() ,Fatal() 日志级别由低到高**
+**在控制台打印：直接调用 Debug()，Info()，Warn(), Error() ,Fatal() 日志级别由低到高**<br/>
 级别概念 类似java日志工具log4j
 
 **设置日志打印格式：**
@@ -34,7 +34,7 @@
 ***
 
 ### 打印日志示例：
-**控制台打印，直接调用打印方法Debug(),Info()等方法**
+**控制台打印，直接调用打印方法Debug(),Info()等方法**<br/>
 	Debug("11111111111111")<br/>
 	Info("22222222")<br/>
 	SetFormat(FORMAT_DATE | FORMAT_SHORTFILENAME)//设置后，下面日志格式只打印日期+短文件信息<br/>
