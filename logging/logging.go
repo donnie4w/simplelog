@@ -57,6 +57,7 @@ const _DATEFORMAT = "20060102"
 
 var static_lo *_logger
 var static_mu *sync.Mutex = new(sync.Mutex)
+var _isGlobal = false
 
 const (
 	_        = iota
@@ -121,7 +122,19 @@ func GetStaticLogger() *_logger {
 	return _staticLogger()
 }
 
+/**
+设置全局log对象，默认false，则不获取对象时，默认控制台打印
+true时，默认全局共用一个log对象，可设置 日志文件
+*/
+func SetGlobal(isGlobal bool) *_logger {
+	_isGlobal = isGlobal
+	return _staticLogger()
+}
+
 func _staticLogger() *_logger {
+	if static_lo != nil {
+		return static_lo
+	}
 	static_mu.Lock()
 	defer static_mu.Unlock()
 	if static_lo == nil {
@@ -150,6 +163,14 @@ func _print(_format _FORMAT, level, _default_level _LEVEL, calldepth int, v ...i
 	if level < _default_level {
 		return
 	}
+	if _isGlobal {
+		_staticLogger().println(level, k1(calldepth), v...)
+	} else {
+		_console(fmt.Sprint(v...), getlevelname(level, default_format), _format, k1(calldepth))
+	}
+}
+
+func __print(_format _FORMAT, level, _default_level _LEVEL, calldepth int, v ...interface{}) {
 	_console(fmt.Sprint(v...), getlevelname(level, default_format), _format, k1(calldepth))
 }
 
@@ -293,7 +314,7 @@ func (this *_logger) println(_level _LEVEL, calldepth int, v ...interface{}) {
 		this._fileObj.write2file(buf.Bytes())
 	}
 	if this._isConsole {
-		_print(this._format, _level, this._level, k1(calldepth), v...)
+		__print(this._format, _level, this._level, k1(calldepth), v...)
 	}
 }
 

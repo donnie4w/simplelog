@@ -6,6 +6,7 @@ import (
 
 /*控制台打印，直接调用打印方法Debug(),Info()等方法*/
 func TestLog(t *testing.T) {
+	// SetGlobal(true)
 	Debug("11111111111111")
 	Info("22222222")
 	SetFormat(FORMAT_DATE | FORMAT_SHORTFILENAME) //设置后，下面日志格式只打印日期+短文件信息
@@ -24,7 +25,7 @@ func TestLogOne(t *testing.T) {
 	log := NewLogger()
 
 	/*按日期分割日志文件，也是默认设置值*/
-	log.SetRollingDaily("d://cfoldTest", "log.txt")
+	// log.SetRollingDaily("d://cfoldTest", "log.txt")
 	/*按日志文件大小分割日志文件*/
 	// log.SetRollingFile("d://cfoldTest", "log.txt", 3, MB)
 
