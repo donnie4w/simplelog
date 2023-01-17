@@ -1,5 +1,5 @@
 ### simplelog 是golang 的日志库 
-代替github.com/donnie4w/go-logger(该库实现有许多问题，目前没有维护)
+代替github.com/donnie4w/go-logger,实现较之更为简洁合理
 
 **在控制台打印：直接调用 Debug()，Info()，Warn(), Error() ,Fatal() 日志级别由低到高**<br/>
 级别概念 类似java日志工具log4j
