@@ -248,6 +248,9 @@ maxFileSize  日志文件大小最大值
 unit    日志文件大小单位
 */
 func (this *_logger) SetRollingFile(fileDir, fileName string, maxFileSize int64, unit _UNIT) (err error) {
+	if fileDir == "" {
+		fileDir, _ = os.Getwd()
+	}
 	this._fileDir, this._fileName, this._maxSize, this._unit = fileDir, fileName, maxFileSize, unit
 	this._rolltype = _ROLLFILE
 	if this._fileObj != nil {
@@ -266,6 +269,9 @@ fileDir 日志文件夹路径
 fileName 日志文件名
 */
 func (this *_logger) SetRollingDaily(fileDir, fileName string) (err error) {
+	if fileDir == "" {
+		fileDir, _ = os.Getwd()
+	}
 	this._fileDir, this._fileName = fileDir, fileName
 	this._rolltype = _DAILY
 	if this._fileObj != nil {
