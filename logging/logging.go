@@ -313,11 +313,13 @@ func (this *_logger) println(_level _LEVEL, calldepth int, v ...interface{}) {
 		if this._fileObj.isMustBackUp() {
 			this.backUp()
 		}
-		this._rwLock.RLock()
-		defer this._rwLock.RUnlock()
-		s := fmt.Sprint(v...)
-		buf := getOutBuffer(s, getlevelname(_level, this._format), this._format, k1(calldepth))
-		this._fileObj.write2file(buf.Bytes())
+		func() {
+			this._rwLock.RLock()
+			defer this._rwLock.RUnlock()
+			s := fmt.Sprint(v...)
+			buf := getOutBuffer(s, getlevelname(_level, this._format), this._format, k1(calldepth))
+			this._fileObj.write2file(buf.Bytes())
+		}()
 	}
 	if this._isConsole {
 		__print(this._format, _level, this._level, k1(calldepth), v...)
