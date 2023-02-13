@@ -16,8 +16,6 @@ import (
 
 /***
 author:donnie email donnie4w@gmail.com
-golang log 简单日志库 simplelog
-代替github.com/donnie4w/go-logger(该库实现有许多问题，目前没有维护)
 在控制台打印：直接调用 Debug(***) Info(***) Warn(***) Error(***) Fatal(***)
 可以设置打印格式：SetFormat(FORMAT_SHORTFILENAME|FORMAT_DATE|FORMAT_TIME)
 	无其他格式，只打印日志内容
