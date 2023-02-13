@@ -125,6 +125,14 @@ func GetStaticLogger() *_logger {
 	return _staticLogger()
 }
 
+func SetRollingFile(fileDir, fileName string, maxFileSize int64, unit _UNIT) (err error) {
+	return static_lo.SetRollingFile(fileDir, fileName, maxFileSize, unit)
+}
+
+func SetRollingDaily(fileDir, fileName string) (err error) {
+	return static_lo.SetRollingDaily(fileDir, fileName)
+}
+
 /**
 设置全局log对象，默认false，则不获取对象时，默认控制台打印
 true时，默认全局共用一个log对象，可设置 日志文件
@@ -325,7 +333,7 @@ func (this *_logger) println(_level _LEVEL, calldepth int, v ...interface{}) {
 			this._rwLock.RLock()
 			defer this._rwLock.RUnlock()
 			s := fmt.Sprint(v...)
-			buf := getOutBuffer(s, getlevelname(_level, this._format), this._format, k1(calldepth))
+			buf := getOutBuffer(s, getlevelname(_level, this._format), this._format, k1(calldepth)+1)
 			this._fileObj.write2file(buf.Bytes())
 		}()
 	}
