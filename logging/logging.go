@@ -430,7 +430,7 @@ func tomorSecond() int64 {
 
 /*————————————————————————————————————————————————————————————————————————————*/
 func getBackupDayliFileName(dir, filename string) (bckupfilename string) {
-	timeStr := time.Now().Add(time.Duration(-24) * time.Hour).Format(_DATEFORMAT)
+	timeStr := time.Now().AddDate(0, 0, -1).Format(_DATEFORMAT)
 	index := strings.LastIndex(filename, ".")
 	if index <= 0 {
 		index = len(filename)
