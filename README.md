@@ -8,8 +8,8 @@
 **FORMAT_SHORTFILENAME|FORMAT_DATE|FORMAT_TIME 为默认格式<br>
 不调用SetFormat()时，使用默认格式**
 
-	无其他格式，只打印日志内容	FORMAT_NANO		无格式
-	长文件名及行数			FORMAT_LONGFILENAME		全路径
+	无其他格式，只打印日志内容	FORMAT_NANO	无格式
+	长文件名及行数			FORMAT_LONGFILENAME	全路径
 	短文件名及行数			FORMAT_SHORTFILENAME	如：logging_test.go:10
 	精确到日期			FORMAT_DATE		如：2023/02/14
 	精确到秒				FORMAT_TIME		如：01:33:27
@@ -36,9 +36,9 @@
 **需将日志写入文件时，则要设置日志文件名**<br>
     使用全局对象log时，直接调用设置方法：
 
-	SetRollingDaily()			按日期分割
+	SetRollingDaily()		按日期分割
 	SetRollingByTime()		可按 小时，天，月 分割日志
-	SetRollingFile()				指定文件大小分割日志
+	SetRollingFile()		指定文件大小分割日志
 	SetRollingFileLoop()		指定文件大小分割日志，并指定保留最大日志文件数
 需要**多实例**指定不同日志文件时：<br>
 
@@ -56,12 +56,16 @@
 	若 log_20221015.txt已经存在，则生成 log_20221015.1.txt ，log_20221015.2.txt等文件
 	
 	log.SetRollingByTime("d://foldTest", "log.txt",MODE_MONTH)
-	按月份分割日志，跨月时，保留上月份日志
-	如：log_202210.txt
+	按月份分割日志，跨月时，保留上月份日志，如：
+		log_202210.txt
+		log_202211.txt
+		log_202212.txt
 	
 	log.SetRollingByTime("d://foldTest", "log.txt",MODE_HOUR)
-	按小时分割日志，，保留上一小时日志
-	如：log_2022101506.txt
+	按小时分割日志, 如：
+		log_2022101506.txt
+		log_2022101507.txt
+		log_2022101508.txt
 
 **2. 按文件大小分割日志文件**
 
