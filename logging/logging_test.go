@@ -25,10 +25,10 @@ func Test_LogOne(t *testing.T) {
 	log := NewLogger()
 	/*按日期分割日志文件，也是默认设置值*/
 	// log.SetRollingDaily(`D:\cfoldTest`, "log.txt")
-	log.SetRollingByTime(`D:\cfoldTest`, "log.txt", MODE_MONTH)
+	log.SetRollingByTime(`D:\cfoldTest`, "log.txt", MODE_DAY)
 	/*按日志文件大小分割日志文件*/
 	// log.SetRollingFile("", "log1.txt", 3, KB)
-	// log.SetRollingFileLoop(`D:\cfoldTest`, "log1.txt", 3, 5, KB)
+	// log.SetRollingFileLoop(`D:\cfoldTest`, "log1.txt", 3, KB, 5)
 	/* 设置打印级别 OFF,DEBUG,INFO,WARN,ERROR,FATAL
 	log.SetLevel(OFF) 设置OFF后，将不再打印后面的日志 默认日志级别为ALL，打印级别*/
 	/* 日志写入文件时，同时在控制台打印出来，设置为false后将不打印在控制台，默认值true*/

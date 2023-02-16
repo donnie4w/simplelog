@@ -135,15 +135,15 @@ func GetStaticLogger() *_logger {
 }
 
 func SetRollingFile(fileDir, fileName string, maxFileSize int64, unit _UNIT) (err error) {
-	return SetRollingFileLoop(fileDir, fileName, maxFileSize, 0, unit)
+	return SetRollingFileLoop(fileDir, fileName, maxFileSize, unit, 0)
 }
 
 func SetRollingDaily(fileDir, fileName string) (err error) {
 	return SetRollingByTime(fileDir, fileName, MODE_DAY)
 }
 
-func SetRollingFileLoop(fileDir, fileName string, maxFileSize int64, maxFileNum int, unit _UNIT) (err error) {
-	return static_lo.SetRollingFileLoop(fileDir, fileName, maxFileSize, maxFileNum, unit)
+func SetRollingFileLoop(fileDir, fileName string, maxFileSize int64, unit _UNIT, maxFileNum int) (err error) {
+	return static_lo.SetRollingFileLoop(fileDir, fileName, maxFileSize, unit, maxFileNum)
 }
 
 func SetRollingByTime(fileDir, fileName string, mode _MODE_TIME) (err error) {
@@ -259,7 +259,7 @@ maxFileSize  日志文件大小最大值
 unit    日志文件大小单位
 */
 func (this *_logger) SetRollingFile(fileDir, fileName string, maxFileSize int64, unit _UNIT) (err error) {
-	return this.SetRollingFileLoop(fileDir, fileName, maxFileSize, 0, unit)
+	return this.SetRollingFileLoop(fileDir, fileName, maxFileSize, unit, 0)
 }
 
 /*按日志文件大小分割日志文件，指定保留的最大日志文件数
@@ -269,7 +269,7 @@ maxFileSize  日志文件大小最大值
 unit    	日志文件大小单位
 maxFileNum  留的日志文件数
 */
-func (this *_logger) SetRollingFileLoop(fileDir, fileName string, maxFileSize int64, maxFileNum int, unit _UNIT) (err error) {
+func (this *_logger) SetRollingFileLoop(fileDir, fileName string, maxFileSize int64, unit _UNIT, maxFileNum int) (err error) {
 	if fileDir == "" {
 		fileDir, _ = os.Getwd()
 	}
@@ -621,7 +621,6 @@ func _rmOverCountFile(dir, backupfileName string, maxFileNum int) {
 			os.Remove(k)
 		}
 	}
-
 }
 
 func _matchString(pattern string, s string) bool {

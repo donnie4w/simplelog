@@ -54,12 +54,24 @@
 	log.SetRollingDaily("d://foldTest", "log.txt")
 	每天按 log_20221015.txt格式 分割
 	若 log_20221015.txt已经存在，则生成 log_20221015.1.txt ，log_20221015.2.txt等文件
+	
+	log.SetRollingByTime("d://foldTest", "log.txt",MODE_MONTH)
+	按月份分割日志，跨月时，保留上月份日志
+	如：log_202210.txt
+	
+	log.SetRollingByTime("d://foldTest", "log.txt",MODE_HOUR)
+	按小时分割日志，，保留上一小时日志
+	如：log_2022101506.txt
 
 **2. 按文件大小分割日志文件**
 
 	log.SetRollingFile("d://foldTest", "log.txt", 300, MB)
 	按文件超过300MB是，按log.1.txt，log.2.txt 格式备份
 	目录参数可以为空，则默认当前目录。
+	
+	log.SetRollingFileLoop(`d://foldTest`, "log.txt", 300, MB, 50) 
+	设置日志文件大小最大为300M
+	日志文件只保留最新的50个
 
 **控制台日志设置**
 
@@ -71,11 +83,10 @@
 ### 打印日志示例：
 
 	//SetRollingFile("", "log.txt", 1000, KB)  设置日志文件信息
-	//SetRollingFileLoop(``, "log.txt", 300, 50, MB)  设置日志文件大小300M，最多保留50个最近的日志文件
+	//SetRollingFileLoop(``, "log.txt", 300, MB, 50)   设置日志文件大小300M，最多保留50个最近的日志文件
 	//SetRollingByTime(``, "log.txt", MODE_MONTH) 按月份分割日志
 	//SetRollingByTime(``, "log.txt", MODE_HOUR)  按小时分割日志
-	//SetRollingByTime(``, "log.txt", MODE_DAY)  按天分割日志
-	 与调用SetRollingDaily("", "log.txt") 作用相同
+	//SetRollingByTime(``, "log.txt", MODE_DAY)  按天分割日志与调用SetRollingDaily("", "log.txt") 作用相同
 	
 	// SetConsole(false)  控制台打印信息，默认true
 	Debug("11111111")
