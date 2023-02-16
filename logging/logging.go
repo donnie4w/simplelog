@@ -418,8 +418,6 @@ func (this *fileObj) write2file(bs []byte) (e error) {
 func (this *fileObj) isMustBackUp() bool {
 	switch this._rolltype {
 	case _DAYLY:
-		fmt.Println(time.Now().Unix())
-		fmt.Println(this._tomorSecond)
 		if time.Now().Unix() >= this._tomorSecond {
 			return true
 		}
