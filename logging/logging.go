@@ -93,19 +93,19 @@ const (
 
 const (
 	/*日志级别：ALL 最低级别*/
-	ALL _LEVEL = iota
+	LEVEL_ALL _LEVEL = iota
 	/*日志级别：DEBUG 小于INFO*/
-	DEBUG
+	LEVEL_DEBUG
 	/*日志级别：INFO 小于 WARN*/
-	INFO
+	LEVEL_INFO
 	/*日志级别：WARN 小于 ERROR*/
-	WARN
+	LEVEL_WARN
 	/*日志级别：ERROR 小于 FATAL*/
-	ERROR
+	LEVEL_ERROR
 	/*日志级别：FATAL 小于 OFF*/
-	FATAL
+	LEVEL_FATAL
 	/*日志级别：off 不打印任何日志*/
-	OFF
+	LEVEL_OFF
 )
 
 const (
@@ -114,7 +114,7 @@ const (
 )
 
 var default_format _FORMAT = FORMAT_SHORTFILENAME | FORMAT_DATE | FORMAT_TIME
-var default_level = ALL
+var default_level = LEVEL_ALL
 
 /*设置打印格式*/
 func SetFormat(format _FORMAT) {
@@ -127,6 +127,10 @@ func SetFormat(format _FORMAT) {
 func SetLevel(level _LEVEL) {
 	default_level = level
 	static_lo.SetLevel(level)
+}
+
+func SetConsole(on bool) {
+	static_lo.SetConsole(on)
 }
 
 /*获得全局Logger对象*/
@@ -155,19 +159,19 @@ func _staticLogger() *_logger {
 }
 
 func Debug(v ...interface{}) {
-	_print(default_format, DEBUG, default_level, 2, v...)
+	_print(default_format, LEVEL_DEBUG, default_level, 2, v...)
 }
 func Info(v ...interface{}) {
-	_print(default_format, INFO, default_level, 2, v...)
+	_print(default_format, LEVEL_INFO, default_level, 2, v...)
 }
 func Warn(v ...interface{}) {
-	_print(default_format, WARN, default_level, 2, v...)
+	_print(default_format, LEVEL_WARN, default_level, 2, v...)
 }
 func Error(v ...interface{}) {
-	_print(default_format, ERROR, default_level, 2, v...)
+	_print(default_format, LEVEL_ERROR, default_level, 2, v...)
 }
 func Fatal(v ...interface{}) {
-	_print(default_format, FATAL, default_level, 2, v...)
+	_print(default_format, LEVEL_FATAL, default_level, 2, v...)
 }
 
 func _print(_format _FORMAT, level, _default_level _LEVEL, calldepth int, v ...interface{}) {
@@ -186,17 +190,17 @@ func getlevelname(level _LEVEL, format _FORMAT) (levelname string) {
 		return
 	}
 	switch level {
-	case ALL:
+	case LEVEL_ALL:
 		levelname = "[ALL]"
-	case DEBUG:
+	case LEVEL_DEBUG:
 		levelname = "[DEBUG]"
-	case INFO:
+	case LEVEL_INFO:
 		levelname = "[INFO]"
-	case WARN:
+	case LEVEL_WARN:
 		levelname = "[WARN]"
-	case ERROR:
+	case LEVEL_ERROR:
 		levelname = "[ERROR]"
-	case FATAL:
+	case LEVEL_FATAL:
 		levelname = "[FATAL]"
 	default:
 	}
@@ -221,7 +225,7 @@ type _logger struct {
 }
 
 func NewLogger() (log *_logger) {
-	log = &_logger{_level: DEBUG, _rolltype: _DAYLY, _rwLock: new(sync.RWMutex), _format: FORMAT_SHORTFILENAME | FORMAT_DATE | FORMAT_TIME, _isConsole: true}
+	log = &_logger{_level: LEVEL_DEBUG, _rolltype: _DAYLY, _rwLock: new(sync.RWMutex), _format: FORMAT_SHORTFILENAME | FORMAT_DATE | FORMAT_TIME, _isConsole: true}
 	log.newfileObj()
 	return
 }
@@ -231,19 +235,19 @@ func (this *_logger) SetConsole(_isConsole bool) {
 	this._isConsole = _isConsole
 }
 func (this *_logger) Debug(v ...interface{}) {
-	this.println(DEBUG, 2, v...)
+	this.println(LEVEL_DEBUG, 2, v...)
 }
 func (this *_logger) Info(v ...interface{}) {
-	this.println(INFO, 2, v...)
+	this.println(LEVEL_INFO, 2, v...)
 }
 func (this *_logger) Warn(v ...interface{}) {
-	this.println(WARN, 2, v...)
+	this.println(LEVEL_WARN, 2, v...)
 }
 func (this *_logger) Error(v ...interface{}) {
-	this.println(ERROR, 2, v...)
+	this.println(LEVEL_ERROR, 2, v...)
 }
 func (this *_logger) Fatal(v ...interface{}) {
-	this.println(FATAL, 2, v...)
+	this.println(LEVEL_FATAL, 2, v...)
 }
 func (this *_logger) SetFormat(format _FORMAT) {
 	this._format = format
@@ -283,9 +287,6 @@ func (this *_logger) SetRollingFileLoop(fileDir, fileName string, maxFileSize in
 	}
 	this.newfileObj()
 	err = this._fileObj.openFileHandler()
-	if err != nil {
-		Fatal(err.Error())
-	}
 	return
 }
 
@@ -313,9 +314,6 @@ func (this *_logger) SetRollingByTime(fileDir, fileName string, mode _MODE_TIME)
 	}
 	this.newfileObj()
 	err = this._fileObj.openFileHandler()
-	if err != nil {
-		Fatal(err.Error())
-	}
 	return
 }
 
@@ -324,18 +322,27 @@ func (this *_logger) newfileObj() {
 	this._fileObj._fileDir, this._fileObj._fileName, this._fileObj._maxSize, this._fileObj._rolltype, this._fileObj._unit, this._fileObj._maxFileNum, this._fileObj._mode = this._fileDir, this._fileName, this._maxSize, this._rolltype, this._unit, this._maxFileNum, this._mode
 }
 
-func (this *_logger) backUp() {
+func (this *_logger) backUp() (err, openFileErr error) {
 	this._rwLock.Lock()
 	defer this._rwLock.Unlock()
 	if !this._fileObj.isMustBackUp() {
 		return
 	}
-	this._fileObj.close()
-	err := this._fileObj.rename()
+	err = this._fileObj.close()
 	if err != nil {
-		_print(this._format, FATAL, FATAL, 4, err.Error())
+		__print(this._format, LEVEL_ERROR, LEVEL_ERROR, 1, err.Error())
+		return
 	}
-	this._fileObj.openFileHandler()
+	err = this._fileObj.rename()
+	if err != nil {
+		__print(this._format, LEVEL_ERROR, LEVEL_ERROR, 1, err.Error())
+		return
+	}
+	openFileErr = this._fileObj.openFileHandler()
+	if openFileErr != nil {
+		__print(this._format, LEVEL_ERROR, LEVEL_ERROR, 1, openFileErr.Error())
+	}
+	return
 }
 
 func (this *_logger) println(_level _LEVEL, calldepth int, v ...interface{}) {
@@ -343,16 +350,19 @@ func (this *_logger) println(_level _LEVEL, calldepth int, v ...interface{}) {
 		return
 	}
 	if this._fileObj._isFileWell {
+		var openFileErr error
 		if this._fileObj.isMustBackUp() {
-			this.backUp()
+			_, openFileErr = this.backUp()
 		}
-		func() {
-			this._rwLock.RLock()
-			defer this._rwLock.RUnlock()
-			s := fmt.Sprint(v...)
-			buf := getOutBuffer(s, getlevelname(_level, this._format), this._format, k1(calldepth)+1)
-			this._fileObj.write2file(buf.Bytes())
-		}()
+		if openFileErr == nil {
+			func() {
+				this._rwLock.RLock()
+				defer this._rwLock.RUnlock()
+				s := fmt.Sprint(v...)
+				buf := getOutBuffer(s, getlevelname(_level, this._format), this._format, k1(calldepth)+1)
+				this._fileObj.write2file(buf.Bytes())
+			}()
+		}
 	}
 	if this._isConsole {
 		__print(this._format, _level, this._level, k1(calldepth), v...)
@@ -387,7 +397,7 @@ func (this *fileObj) openFileHandler() (e error) {
 	fname := fmt.Sprint(this._fileDir, "/", this._fileName)
 	this._fileHandler, e = os.OpenFile(fname, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0666)
 	if e != nil {
-		_print(default_format, FATAL, FATAL, 4, e.Error())
+		__print(default_format, LEVEL_ERROR, LEVEL_ERROR, 1, e.Error())
 		this._isFileWell = false
 		return
 	}
@@ -445,11 +455,12 @@ func (this *fileObj) rename() (err error) {
 	return
 }
 
-func (this *fileObj) close() {
+func (this *fileObj) close() (err error) {
 	defer catchError()
 	if this._fileHandler != nil {
-		this._fileHandler.Close()
+		err = this._fileHandler.Close()
 	}
+	return
 }
 
 func tomorSecond(mode _MODE_TIME) int64 {
