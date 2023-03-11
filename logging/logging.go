@@ -1,3 +1,5 @@
+// Copyright (c) , donnie <donnie4w@gmail.com>
+// All rights reserved.
 package logging
 
 import (
@@ -17,7 +19,6 @@ import (
 )
 
 /***
-author:donnie email donnie4w@gmail.com
 在控制台打印：直接调用 Debug(***) Info(***) Warn(***) Error(***) Fatal(***)
 可以设置打印格式：SetFormat(FORMAT_SHORTFILENAME|FORMAT_DATE|FORMAT_TIME)
 	无其他格式，只打印日志内容
