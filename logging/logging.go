@@ -253,6 +253,21 @@ func (this *_logger) Error(v ...interface{}) {
 func (this *_logger) Fatal(v ...interface{}) {
 	this.println(LEVEL_FATAL, 2, v...)
 }
+
+func (this *_logger) Write(bs []byte) {
+	if this._fileObj._isFileWell {
+		var openFileErr error
+		if this._fileObj.isMustBackUp() {
+			_, openFileErr = this.backUp()
+		}
+		if openFileErr == nil {
+			this._rwLock.RLock()
+			defer this._rwLock.RUnlock()
+			this._fileObj.write2file(bs)
+		}
+	}
+}
+
 func (this *_logger) SetFormat(format _FORMAT) *_logger {
 	this._format = format
 	return this
