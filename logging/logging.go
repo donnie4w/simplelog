@@ -254,7 +254,7 @@ func (this *_logger) Fatal(v ...interface{}) {
 	this.println(LEVEL_FATAL, 2, v...)
 }
 
-func (this *_logger) Write(bs []byte) {
+func (this *_logger) Write(bs []byte) (n int, err error) {
 	if this._fileObj._isFileWell {
 		var openFileErr error
 		if this._fileObj.isMustBackUp() {
@@ -263,9 +263,10 @@ func (this *_logger) Write(bs []byte) {
 		if openFileErr == nil {
 			this._rwLock.RLock()
 			defer this._rwLock.RUnlock()
-			this._fileObj.write2file(bs)
+			return this._fileObj.write2file(bs)
 		}
 	}
+	return
 }
 
 func (this *_logger) SetFormat(format _FORMAT) *_logger {
@@ -446,11 +447,11 @@ func (this *fileObj) addFileSize(size int64) {
 	atomic.AddInt64(&this._fileSize, size)
 }
 
-func (this *fileObj) write2file(bs []byte) (e error) {
+func (this *fileObj) write2file(bs []byte) (n int, e error) {
 	defer catchError()
 	if bs != nil {
 		this.addFileSize(int64(len(bs)))
-		_write2file(this._fileHandler, bs)
+		return _write2file(this._fileHandler, bs)
 	}
 	return
 }
@@ -571,8 +572,8 @@ func _getBackupfilename(count int, dir, filename, suffix string) (bckupfilename 
 	return
 }
 
-func _write2file(f *os.File, bs []byte) (e error) {
-	_, e = f.Write(bs)
+func _write2file(f *os.File, bs []byte) (n int, e error) {
+	n, e = f.Write(bs)
 	return
 }
 
