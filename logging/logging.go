@@ -254,16 +254,17 @@ func (this *_logger) Fatal(v ...interface{}) {
 	this.println(LEVEL_FATAL, 2, v...)
 }
 
-func (this *_logger) Write(bs []byte) (n int, err error) {
+func (this *_logger) Write(bs []byte) (n int, err error, bakfn string) {
 	if this._fileObj._isFileWell {
 		var openFileErr error
 		if this._fileObj.isMustBackUp() {
-			_, openFileErr = this.backUp()
+			_, openFileErr, bakfn = this.backUp()
 		}
 		if openFileErr == nil {
 			this._rwLock.RLock()
 			defer this._rwLock.RUnlock()
-			return this._fileObj.write2file(bs)
+			n, err = this._fileObj.write2file(bs)
+			return
 		}
 	}
 	return
@@ -348,7 +349,7 @@ func (this *_logger) newfileObj() {
 	this._fileObj._fileDir, this._fileObj._fileName, this._fileObj._maxSize, this._fileObj._rolltype, this._fileObj._unit, this._fileObj._maxFileNum, this._fileObj._mode = this._fileDir, this._fileName, this._maxSize, this._rolltype, this._unit, this._maxFileNum, this._mode
 }
 
-func (this *_logger) backUp() (err, openFileErr error) {
+func (this *_logger) backUp() (err, openFileErr error, bakfn string) {
 	this._rwLock.Lock()
 	defer this._rwLock.Unlock()
 	if !this._fileObj.isMustBackUp() {
@@ -359,7 +360,7 @@ func (this *_logger) backUp() (err, openFileErr error) {
 		__print(this._format, LEVEL_ERROR, LEVEL_ERROR, 1, err.Error())
 		return
 	}
-	err = this._fileObj.rename()
+	err, bakfn = this._fileObj.rename()
 	if err != nil {
 		__print(this._format, LEVEL_ERROR, LEVEL_ERROR, 1, err.Error())
 		return
@@ -378,7 +379,7 @@ func (this *_logger) println(_level _LEVEL, calldepth int, v ...interface{}) {
 	if this._fileObj._isFileWell {
 		var openFileErr error
 		if this._fileObj.isMustBackUp() {
-			_, openFileErr = this.backUp()
+			_, openFileErr, _ = this.backUp()
 		}
 		if openFileErr == nil {
 			func() {
@@ -434,8 +435,7 @@ func (this *fileObj) openFileHandler() (e error) {
 	}
 	this._isFileWell = true
 	this._tomorSecond = tomorSecond(this._mode)
-	fs, err := this._fileHandler.Stat()
-	if err == nil {
+	if fs, err := this._fileHandler.Stat(); err == nil {
 		this._fileSize = fs.Size()
 	} else {
 		e = err
@@ -468,8 +468,7 @@ func (this *fileObj) isMustBackUp() bool {
 	return false
 }
 
-func (this *fileObj) rename() (err error) {
-	bckupfilename := ""
+func (this *fileObj) rename() (err error, bckupfilename string) {
 	if this._rolltype == _DAYLY {
 		bckupfilename = getBackupDayliFileName(this._fileDir, this._fileName, this._mode)
 	} else {
