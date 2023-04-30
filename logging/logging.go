@@ -258,7 +258,7 @@ func (this *_logger) Write(bs []byte) (n int, err error, bakfn string) {
 	if this._fileObj._isFileWell {
 		var openFileErr error
 		if this._fileObj.isMustBackUp() {
-			_, openFileErr, bakfn = this.backUp()
+			err, openFileErr, bakfn = this.backUp()
 		}
 		if openFileErr == nil {
 			this._rwLock.RLock()
