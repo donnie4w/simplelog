@@ -254,7 +254,7 @@ func (this *_logger) Fatal(v ...interface{}) {
 	this.println(LEVEL_FATAL, 2, v...)
 }
 
-func (this *_logger) Write(bs []byte) (n int, err error, bakfn string) {
+func (this *_logger) Write(bs []byte) (err error, bakfn string) {
 	if this._fileObj._isFileWell {
 		var openFileErr error
 		if this._fileObj.isMustBackUp() {
@@ -263,7 +263,7 @@ func (this *_logger) Write(bs []byte) (n int, err error, bakfn string) {
 		if openFileErr == nil {
 			this._rwLock.RLock()
 			defer this._rwLock.RUnlock()
-			n, err = this._fileObj.write2file(bs)
+			_, err = this._fileObj.write2file(bs)
 			return
 		}
 	}
@@ -450,8 +450,9 @@ func (this *fileObj) addFileSize(size int64) {
 func (this *fileObj) write2file(bs []byte) (n int, e error) {
 	defer catchError()
 	if bs != nil {
-		this.addFileSize(int64(len(bs)))
-		return _write2file(this._fileHandler, bs)
+		if n, e = _write2file(this._fileHandler, bs); e == nil {
+			this.addFileSize(int64(n))
+		}
 	}
 	return
 }
