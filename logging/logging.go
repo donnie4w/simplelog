@@ -161,20 +161,25 @@ func _staticLogger() *_logger {
 	return static_lo
 }
 
-func Debug(v ...interface{}) {
+func Debug(v ...interface{}) *_logger {
 	_print(default_format, LEVEL_DEBUG, default_level, 2, v...)
+	return _staticLogger()
 }
-func Info(v ...interface{}) {
+func Info(v ...interface{}) *_logger {
 	_print(default_format, LEVEL_INFO, default_level, 2, v...)
+	return _staticLogger()
 }
-func Warn(v ...interface{}) {
+func Warn(v ...interface{}) *_logger {
 	_print(default_format, LEVEL_WARN, default_level, 2, v...)
+	return _staticLogger()
 }
-func Error(v ...interface{}) {
+func Error(v ...interface{}) *_logger {
 	_print(default_format, LEVEL_ERROR, default_level, 2, v...)
+	return _staticLogger()
 }
-func Fatal(v ...interface{}) {
+func Fatal(v ...interface{}) *_logger {
 	_print(default_format, LEVEL_FATAL, default_level, 2, v...)
+	return _staticLogger()
 }
 
 func _print(_format _FORMAT, level, _default_level _LEVEL, calldepth int, v ...interface{}) {
@@ -238,20 +243,25 @@ func (this *_logger) SetConsole(_isConsole bool) *_logger {
 	this._isConsole = _isConsole
 	return this
 }
-func (this *_logger) Debug(v ...interface{}) {
+func (this *_logger) Debug(v ...interface{}) *_logger {
 	this.println(LEVEL_DEBUG, 2, v...)
+	return this
 }
-func (this *_logger) Info(v ...interface{}) {
+func (this *_logger) Info(v ...interface{}) *_logger {
 	this.println(LEVEL_INFO, 2, v...)
+	return this
 }
-func (this *_logger) Warn(v ...interface{}) {
+func (this *_logger) Warn(v ...interface{}) *_logger {
 	this.println(LEVEL_WARN, 2, v...)
+	return this
 }
-func (this *_logger) Error(v ...interface{}) {
+func (this *_logger) Error(v ...interface{}) *_logger {
 	this.println(LEVEL_ERROR, 2, v...)
+	return this
 }
-func (this *_logger) Fatal(v ...interface{}) {
+func (this *_logger) Fatal(v ...interface{}) *_logger {
 	this.println(LEVEL_FATAL, 2, v...)
+	return this
 }
 
 func (this *_logger) Write(bs []byte) (err error, bakfn string) {
