@@ -504,14 +504,14 @@ func (this *fileObj) rename() (err error, bckupfilename string) {
 		oldPath := fmt.Sprint(this._fileDir, "/", this._fileName)
 		newPath := fmt.Sprint(this._fileDir, "/", bckupfilename)
 		err = os.Rename(oldPath, newPath)
-		if err == nil && this._rolltype == _ROLLFILE && this._maxFileNum > 0 {
-			go _rmOverCountFile(this._fileDir, bckupfilename, this._maxFileNum)
-		}
 		go func() {
 			if err == nil && this._gzip {
 				if err = lgzip(fmt.Sprint(newPath, ".gz"), bckupfilename, newPath); err == nil {
 					os.Remove(newPath)
 				}
+			}
+			if err == nil && this._rolltype == _ROLLFILE && this._maxFileNum > 0 {
+				_rmOverCountFile(this._fileDir, bckupfilename, this._maxFileNum, this._gzip)
 			}
 		}()
 	}
@@ -678,7 +678,7 @@ func catchError() {
 	}
 }
 
-func _rmOverCountFile(dir, backupfileName string, maxFileNum int) {
+func _rmOverCountFile(dir, backupfileName string, maxFileNum int, isGzip bool) {
 	static_mu.Lock()
 	defer static_mu.Unlock()
 	f, err := os.Open(dir)
@@ -706,7 +706,11 @@ func _rmOverCountFile(dir, backupfileName string, maxFileNum int) {
 	rmfiles := make([]string, 0)
 	i := 0
 	for _, f := range dirs {
-		if len(f.Name()) > len(prefixname) && f.Name()[:len(prefixname)] == prefixname && _matchString("^[0-9]+$", f.Name()[len(prefixname):len(f.Name())-suffixlen]) {
+		checkfname := f.Name()
+		if isGzip && strings.HasSuffix(checkfname, ".gz") {
+			checkfname = checkfname[:len(checkfname)-3]
+		}
+		if len(checkfname) > len(prefixname) && checkfname[:len(prefixname)] == prefixname && _matchString("^[0-9]+$", checkfname[len(prefixname):len(checkfname)-suffixlen]) {
 			finfo, err := f.Info()
 			if err == nil && !finfo.IsDir() {
 				i++
