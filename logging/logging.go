@@ -569,8 +569,15 @@ func getBackupRollFileName(dir, filename string) (bckupfilename string, er error
 	}
 	fname := filename[:index]
 	suffix := filename[index:]
-	length := len(list)
-	bckupfilename = _getBackupfilename(length, dir, fname, suffix)
+	i := 1
+	for _, fd := range list {
+		pattern := fmt.Sprint(`^`, fname, `_[\d]{1,}`, suffix, `$`)
+		if _matchString(pattern, fd.Name()) {
+			fmt.Println(fd.Name())
+			i++
+		}
+	}
+	bckupfilename = _getBackupfilename(i, dir, fname, suffix)
 	return
 }
 
