@@ -4,6 +4,7 @@ package logging
 
 import (
 	"bytes"
+	"compress/gzip"
 	"errors"
 	"fmt"
 	"io"
@@ -157,6 +158,10 @@ func SetRollingByTime(fileDir, fileName string, mode _MODE_TIME) (l *_logger, er
 	return static_lo.SetRollingByTime(fileDir, fileName, mode)
 }
 
+func SetGzipOn(is bool) (l *_logger) {
+	return static_lo.SetGzipOn(is)
+}
+
 func _staticLogger() *_logger {
 	return static_lo
 }
@@ -230,6 +235,7 @@ type _logger struct {
 	_fileObj    *fileObj
 	_maxFileNum int
 	_isConsole  bool
+	_gzip       bool
 }
 
 func NewLogger() (log *_logger) {
@@ -354,9 +360,17 @@ func (this *_logger) SetRollingByTime(fileDir, fileName string, mode _MODE_TIME)
 	return this, err
 }
 
+func (this *_logger) SetGzipOn(is bool) *_logger {
+	this._gzip = is
+	if this._fileObj != nil {
+		this._fileObj._gzip = is
+	}
+	return this
+}
+
 func (this *_logger) newfileObj() {
 	this._fileObj = new(fileObj)
-	this._fileObj._fileDir, this._fileObj._fileName, this._fileObj._maxSize, this._fileObj._rolltype, this._fileObj._unit, this._fileObj._maxFileNum, this._fileObj._mode = this._fileDir, this._fileName, this._maxSize, this._rolltype, this._unit, this._maxFileNum, this._mode
+	this._fileObj._fileDir, this._fileObj._fileName, this._fileObj._maxSize, this._fileObj._rolltype, this._fileObj._unit, this._fileObj._maxFileNum, this._fileObj._mode, this._fileObj._gzip = this._fileDir, this._fileName, this._maxSize, this._rolltype, this._unit, this._maxFileNum, this._mode, this._gzip
 }
 
 func (this *_logger) backUp() (err, openFileErr error, bakfn string) {
@@ -424,6 +438,7 @@ type fileObj struct {
 	_isFileWell  bool
 	_maxFileNum  int
 	_mode        _MODE_TIME
+	_gzip        bool
 }
 
 func (this *fileObj) openFileHandler() (e error) {
@@ -481,9 +496,9 @@ func (this *fileObj) isMustBackUp() bool {
 
 func (this *fileObj) rename() (err error, bckupfilename string) {
 	if this._rolltype == _DAYLY {
-		bckupfilename = getBackupDayliFileName(this._fileDir, this._fileName, this._mode)
+		bckupfilename = getBackupDayliFileName(this._fileDir, this._fileName, this._mode, this._gzip)
 	} else {
-		bckupfilename, err = getBackupRollFileName(this._fileDir, this._fileName)
+		bckupfilename, err = getBackupRollFileName(this._fileDir, this._fileName, this._gzip)
 	}
 	if bckupfilename != "" && err == nil {
 		oldPath := fmt.Sprint(this._fileDir, "/", this._fileName)
@@ -492,6 +507,13 @@ func (this *fileObj) rename() (err error, bckupfilename string) {
 		if err == nil && this._rolltype == _ROLLFILE && this._maxFileNum > 0 {
 			go _rmOverCountFile(this._fileDir, bckupfilename, this._maxFileNum)
 		}
+		go func() {
+			if err == nil && this._gzip {
+				if err = lgzip(fmt.Sprint(newPath, ".gz"), bckupfilename, newPath); err == nil {
+					os.Remove(newPath)
+				}
+			}
+		}()
 	}
 	return
 }
@@ -533,7 +555,7 @@ func _yestStr(mode _MODE_TIME) string {
 }
 
 /*————————————————————————————————————————————————————————————————————————————*/
-func getBackupDayliFileName(dir, filename string, mode _MODE_TIME) (bckupfilename string) {
+func getBackupDayliFileName(dir, filename string, mode _MODE_TIME, isGzip bool) (bckupfilename string) {
 	timeStr := _yestStr(mode)
 	index := strings.LastIndex(filename, ".")
 	if index <= 0 {
@@ -542,9 +564,16 @@ func getBackupDayliFileName(dir, filename string, mode _MODE_TIME) (bckupfilenam
 	fname := filename[:index]
 	suffix := filename[index:]
 	bckupfilename = fmt.Sprint(fname, "_", timeStr, suffix)
-	if isFileExist(fmt.Sprint(dir, "/", bckupfilename)) {
-		bckupfilename = _getBackupfilename(1, dir, fmt.Sprint(fname, "_", timeStr), suffix)
+	if isGzip {
+		if isFileExist(fmt.Sprint(dir, "/", bckupfilename, ".gz")) {
+			bckupfilename = _getBackupfilename(1, dir, fmt.Sprint(fname, "_", timeStr), suffix, isGzip)
+		}
+	} else {
+		if isFileExist(fmt.Sprint(dir, "/", bckupfilename)) {
+			bckupfilename = _getBackupfilename(1, dir, fmt.Sprint(fname, "_", timeStr), suffix, isGzip)
+		}
 	}
+
 	return
 }
 
@@ -557,7 +586,7 @@ func _getDirList(dir string) ([]os.DirEntry, error) {
 	return f.ReadDir(-1)
 }
 
-func getBackupRollFileName(dir, filename string) (bckupfilename string, er error) {
+func getBackupRollFileName(dir, filename string, isGzip bool) (bckupfilename string, er error) {
 	list, err := _getDirList(dir)
 	if err != nil {
 		er = err
@@ -572,19 +601,27 @@ func getBackupRollFileName(dir, filename string) (bckupfilename string, er error
 	i := 1
 	for _, fd := range list {
 		pattern := fmt.Sprint(`^`, fname, `_[\d]{1,}`, suffix, `$`)
+		if isGzip {
+			pattern = fmt.Sprint(`^`, fname, `_[\d]{1,}`, suffix, `.gz$`)
+		}
 		if _matchString(pattern, fd.Name()) {
-			fmt.Println(fd.Name())
 			i++
 		}
 	}
-	bckupfilename = _getBackupfilename(i, dir, fname, suffix)
+	bckupfilename = _getBackupfilename(i, dir, fname, suffix, isGzip)
 	return
 }
 
-func _getBackupfilename(count int, dir, filename, suffix string) (bckupfilename string) {
+func _getBackupfilename(count int, dir, filename, suffix string, isGzip bool) (bckupfilename string) {
 	bckupfilename = fmt.Sprint(filename, "_", count, suffix)
-	if isFileExist(fmt.Sprint(dir, "/", bckupfilename)) {
-		return _getBackupfilename(count+1, dir, filename, suffix)
+	if isGzip {
+		if isFileExist(fmt.Sprint(dir, "/", bckupfilename, ".gz")) {
+			return _getBackupfilename(count+1, dir, filename, suffix, isGzip)
+		}
+	} else {
+		if isFileExist(fmt.Sprint(dir, "/", bckupfilename)) {
+			return _getBackupfilename(count+1, dir, filename, suffix, isGzip)
+		}
 	}
 	return
 }
@@ -700,4 +737,22 @@ func _time() time.Time {
 	} else {
 		return time.Now()
 	}
+}
+
+func lgzip(gzfile, gzname, srcfile string) (err error) {
+	var gf *os.File
+	if gf, err = os.Create(gzfile); err == nil {
+		defer gf.Close()
+		var f1 *os.File
+		if f1, err = os.Open(srcfile); err == nil {
+			defer f1.Close()
+			gw := gzip.NewWriter(gf)
+			defer gw.Close()
+			gw.Header.Name = gzname
+			var buf bytes.Buffer
+			io.Copy(&buf, f1)
+			_, err = gw.Write(buf.Bytes())
+		}
+	}
+	return
 }
