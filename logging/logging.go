@@ -19,33 +19,6 @@ import (
 	"time"
 )
 
-/***
-在控制台打印：直接调用 Debug(***) Info(***) Warn(***) Error(***) Fatal(***)
-可以设置打印格式：SetFormat(FORMAT_SHORTFILENAME|FORMAT_DATE|FORMAT_TIME)
-	无其他格式，只打印日志内容
-	FORMAT_NANO
-	长文件名及行数
-	FORMAT_LONGFILENAME
-	短文件名及行数
-	FORMAT_SHORTFILENAME
-	精确到日期
-	FORMAT_DATE
-	精确到秒
-	FORMAT_TIME
-	精确到微秒
-	FORMAT_MICROSECNDS
-	—————————————————————————————————————————————————————————————————————
-    写日志文件可以获取实例
-    全局实例可以直接调用log := logging.GetStaticLogger()
-    获取新实例可以调用log := logging.NewLogger()
-	1. 按日期分割日志文件
-    	log.SetRollingDaily("d://foldTest", "log.txt")
-	2. 按文件大小分割日志文件
-	log.SetRollingFile("d://foldTest", "log.txt", 300, MB)
-	log.SetConsole(false)控制台不打日志,默认值true
-    日志级别
-***/
-
 const (
 	_VER string = "1.0.1"
 )
@@ -81,34 +54,45 @@ const (
 )
 
 const (
-	/*无其他格式，只打印日志内容*/
-	FORMAT_NANO _FORMAT = 0
-	/*长文件名(文件绝对路径)及行数*/
+	/*无其他格式，只打印日志内容*/ /*no format, Only log content is printed*/
+	FORMAT_NANO       _FORMAT = 0
+
+	/*长文件名(文件绝对路径)及行数*/ /*full file name and line number*/
 	FORMAT_LONGFILENAME = _FORMAT(log.Llongfile)
-	/*短文件名及行数*/
+
+	/*短文件名及行数*/          /*final file name element and line number*/
 	FORMAT_SHORTFILENAME = _FORMAT(log.Lshortfile)
-	/*日期时间精确到天*/
-	FORMAT_DATE = _FORMAT(log.Ldate)
-	/*时间精确到秒*/
+
+	/*日期时间精确到天*/ /*the date in the local time zone: 2009/01/23*/
+	FORMAT_DATE  = _FORMAT(log.Ldate)
+
+	/*时间精确到秒*/  /*the time in the local time zone: 01:23:23*/
 	FORMAT_TIME = _FORMAT(log.Ltime)
-	/*时间精确到微秒*/
+
+	/*时间精确到微秒*/        /*microsecond resolution: 01:23:23.123123.*/
 	FORMAT_MICROSECNDS = _FORMAT(log.Lmicroseconds)
 )
 
 const (
-	/*日志级别：ALL 最低级别*/
-	LEVEL_ALL _LEVEL = iota
-	/*日志级别：DEBUG 小于INFO*/
+	/*日志级别：ALL 最低级别*/ /*Log level: LEVEL_ALL is the lowest level,If the log level is this level, logs of other levels can be printed*/
+	LEVEL_ALL         _LEVEL = iota
+
+	/*日志级别：DEBUG 小于INFO*/ /*Log level: ALL<DEBUG<INFO*/
 	LEVEL_DEBUG
-	/*日志级别：INFO 小于 WARN*/
+
+	/*日志级别：INFO 小于 WARN*/ /*Log level: DEBUG<INFO<WARN*/
 	LEVEL_INFO
-	/*日志级别：WARN 小于 ERROR*/
+
+	/*日志级别：WARN 小于 ERROR*/ /*Log level: INFO<WARN<ERROR*/
 	LEVEL_WARN
-	/*日志级别：ERROR 小于 FATAL*/
+
+	/*日志级别：ERROR 小于 FATAL*/ /*Log level: WARN<ERROR<FATAL*/
 	LEVEL_ERROR
-	/*日志级别：FATAL 小于 OFF*/
+
+	/*日志级别：FATAL 小于 OFF*/ /*Log level: ERROR<FATAL<OFF*/
 	LEVEL_FATAL
-	/*日志级别：off 不打印任何日志*/
+
+	/*日志级别：off 不打印任何日志*/ /*Log level: LEVEL_OFF means none of the logs can be printed*/
 	LEVEL_OFF
 )
 
@@ -127,37 +111,54 @@ func SetFormat(format _FORMAT) *_logger {
 }
 
 /*设置控制台日志级别，默认ALL*/
+// Setting the log Level
 func SetLevel(level _LEVEL) *_logger {
 	default_level = level
 	return static_lo.SetLevel(level)
 }
 
+// print logs on the console or not. default true
 func SetConsole(on bool) *_logger {
 	return static_lo.SetConsole(on)
 
 }
 
-/*获得全局Logger对象*/
+/*获得全局Logger对象*/ /*return the default log object*/
 func GetStaticLogger() *_logger {
 	return _staticLogger()
 }
 
+// when the log file(fileDir+`\`+fileName) exceeds the specified size(maxFileSize), it will be backed up with a specified file name
+// Parameters:
+//   - fileDir   :directory where log files are stored, If it is the current directory, you also can set it to ""
+//   - fileName  : log file name
+//   - maxFileSize :  maximum size of a log file
+//   - unit		   :  size unit :  KB,MB,GB,TB
 func SetRollingFile(fileDir, fileName string, maxFileSize int64, unit _UNIT) (l *_logger, err error) {
 	return SetRollingFileLoop(fileDir, fileName, maxFileSize, unit, 0)
 }
 
+// yesterday's log data is backed up to a specified log file each day
+// Parameters:
+//   - fileDir   :directory where log files are stored, If it is the current directory, you also can set it to ""
+//   - fileName  : log file name
 func SetRollingDaily(fileDir, fileName string) (l *_logger, err error) {
 	return SetRollingByTime(fileDir, fileName, MODE_DAY)
 }
 
+// like SetRollingFile,but only keep (maxFileNum) current files
+// - maxFileNum : the number of files that are retained
 func SetRollingFileLoop(fileDir, fileName string, maxFileSize int64, unit _UNIT, maxFileNum int) (l *_logger, err error) {
 	return static_lo.SetRollingFileLoop(fileDir, fileName, maxFileSize, unit, maxFileNum)
 }
 
+// like SetRollingDaily,but supporte hourly backup ,dayly backup and monthly backup
+// mode : 	MODE_HOUR    MODE_DAY   MODE_MONTH
 func SetRollingByTime(fileDir, fileName string, mode _MODE_TIME) (l *_logger, err error) {
 	return static_lo.SetRollingByTime(fileDir, fileName, mode)
 }
 
+// when set true, the specified backup file of both SetRollingFile and SetRollingFileLoop will be save as a compressed file
 func SetGzipOn(is bool) (l *_logger) {
 	return static_lo.SetGzipOn(is)
 }
@@ -166,22 +167,31 @@ func _staticLogger() *_logger {
 	return static_lo
 }
 
+// Logs are printed at the DEBUG level
 func Debug(v ...interface{}) *_logger {
 	_print(default_format, LEVEL_DEBUG, default_level, 2, v...)
 	return _staticLogger()
 }
+
+// Logs are printed at the INFO level
 func Info(v ...interface{}) *_logger {
 	_print(default_format, LEVEL_INFO, default_level, 2, v...)
 	return _staticLogger()
 }
+
+// Logs are printed at the WARN level
 func Warn(v ...interface{}) *_logger {
 	_print(default_format, LEVEL_WARN, default_level, 2, v...)
 	return _staticLogger()
 }
+
+// Logs are printed at the ERROR level
 func Error(v ...interface{}) *_logger {
 	_print(default_format, LEVEL_ERROR, default_level, 2, v...)
 	return _staticLogger()
 }
+
+// Logs are printed at the FATAL level
 func Fatal(v ...interface{}) *_logger {
 	_print(default_format, LEVEL_FATAL, default_level, 2, v...)
 	return _staticLogger()
@@ -238,6 +248,7 @@ type _logger struct {
 	_gzip       bool
 }
 
+// return a new log object
 func NewLogger() (log *_logger) {
 	log = &_logger{_level: LEVEL_DEBUG, _rolltype: _DAYLY, _rwLock: new(sync.RWMutex), _format: FORMAT_SHORTFILENAME | FORMAT_DATE | FORMAT_TIME, _isConsole: true}
 	log.newfileObj()
@@ -413,9 +424,11 @@ func (this *_logger) println(_level _LEVEL, calldepth int, v ...interface{}) {
 					s := fmt.Sprint(v...)
 					buf := getOutBuffer(s, getlevelname(_level, this._format), this._format, k1(calldepth)+1)
 					this._fileObj.write2file(buf.Bytes())
+					bufferpool.Put(buf)
 				} else {
-					var bs []byte
+					bs := bytepool.Get(len(v))
 					this._fileObj.write2file(fmt.Appendln(bs, v...))
+					bytepool.Put(bs)
 				}
 			}()
 		}
@@ -555,6 +568,96 @@ func _yestStr(mode _MODE_TIME) string {
 }
 
 /*————————————————————————————————————————————————————————————————————————————*/
+var bytepool = newBytePool()
+
+type bytePool struct {
+	pool   [6]sync.Pool
+	router [6]int
+}
+
+func newBytePool() *bytePool {
+	p := &bytePool{}
+	p.pool = [6]sync.Pool{
+		{New: func() any { return make([]byte, 0) }},
+		{New: func() any { return make([]byte, 0) }},
+		{New: func() any { return make([]byte, 0) }},
+		{New: func() any { return make([]byte, 0) }},
+		{New: func() any { return make([]byte, 0) }},
+		{New: func() any { return make([]byte, 0) }},
+	}
+	p.router = [6]int{8, 32, 64, 128, 256, 512}
+	return p
+}
+
+func (this *bytePool) Get(minsize int) []byte {
+	pre := this.getRouter(minsize)
+	return this.pool[pre].Get().([]byte)
+}
+
+func (this *bytePool) Put(bs []byte) {
+	if bs != nil {
+		pre := this.getRouter(len(bs))
+		bs = bs[:0]
+		this.pool[pre].Put(bs)
+	}
+}
+
+func (this *bytePool) getRouter(size int) (pre int) {
+	for i, v := range this.router {
+		if size >= v {
+			pre = i
+			break
+		}
+	}
+	return
+}
+
+/*************************************************/
+var bufferpool = newBufferPool()
+
+type bufferPool struct {
+	pool   [6]sync.Pool
+	router [6]int
+}
+
+func newBufferPool() *bufferPool {
+	p := &bufferPool{}
+	p.pool = [6]sync.Pool{
+		{New: func() any { return bytes.NewBuffer([]byte{}) }},
+		{New: func() any { return bytes.NewBuffer([]byte{}) }},
+		{New: func() any { return bytes.NewBuffer([]byte{}) }},
+		{New: func() any { return bytes.NewBuffer([]byte{}) }},
+		{New: func() any { return bytes.NewBuffer([]byte{}) }},
+		{New: func() any { return bytes.NewBuffer([]byte{}) }},
+	}
+	p.router = [6]int{16, 32, 64, 128, 256, 512}
+	return p
+}
+
+func (this *bufferPool) Get(minsize int) *bytes.Buffer {
+	pre := this.getRouter(minsize)
+	return this.pool[pre].Get().(*bytes.Buffer)
+}
+
+func (this *bufferPool) Put(buf *bytes.Buffer) {
+	if buf != nil {
+		pre := this.getRouter(buf.Cap())
+		buf.Reset()
+		this.pool[pre].Put(buf)
+	}
+}
+
+func (this *bufferPool) getRouter(size int) (pre int) {
+	for i, v := range this.router {
+		if size >= v {
+			pre = i
+			break
+		}
+	}
+	return
+}
+
+/*————————————————————————————————————————————————————————————————————————————*/
 func getBackupDayliFileName(dir, filename string, mode _MODE_TIME, isGzip bool) (bckupfilename string) {
 	timeStr := _yestStr(mode)
 	index := strings.LastIndex(filename, ".")
@@ -634,7 +737,8 @@ func _write2file(f *os.File, bs []byte) (n int, e error) {
 func _console(s string, levelname string, flag _FORMAT, calldepth int) {
 	if flag != FORMAT_NANO {
 		buf := getOutBuffer(s, levelname, flag, k1(calldepth))
-		fmt.Print(&buf)
+		fmt.Print(buf)
+		bufferpool.Put(buf)
 	} else {
 		fmt.Println(s)
 	}
@@ -649,8 +753,9 @@ func k1(calldepth int) int {
 	return calldepth + 1
 }
 
-func getOutBuffer(s string, levelname string, flag _FORMAT, calldepth int) (buf bytes.Buffer) {
-	outwriter(&buf, levelname, flag, k1(calldepth), s)
+func getOutBuffer(s string, levelname string, flag _FORMAT, calldepth int) (buf *bytes.Buffer) {
+	buf = bufferpool.Get(len([]byte(s)))
+	outwriter(buf, levelname, flag, k1(calldepth), s)
 	return
 }
 
