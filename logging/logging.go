@@ -426,7 +426,7 @@ func (this *_logger) println(_level _LEVEL, calldepth int, v ...interface{}) {
 					this._fileObj.write2file(buf.Bytes())
 					bufferpool.Put(buf)
 				} else {
-					bs := bytepool.Get(len(v))
+					bs := bytepool.Get(sizeof(v))
 					this._fileObj.write2file(fmt.Appendln(bs, v...))
 					bytepool.Put(bs)
 				}
@@ -756,6 +756,50 @@ func k1(calldepth int) int {
 func getOutBuffer(s string, levelname string, flag _FORMAT, calldepth int) (buf *bytes.Buffer) {
 	buf = bufferpool.Get(len([]byte(s)))
 	outwriter(buf, levelname, flag, k1(calldepth), s)
+	return
+}
+
+func sizeof(vs []interface{}) (_r int) {
+	if vs != nil {
+		for _, v := range vs {
+			switch v.(type) {
+			case string:
+				_r = _r + len([]byte(v.(string)))
+			case bool:
+				_r = _r + 1
+			case int8:
+				_r = _r + 1
+			case int16:
+				_r = _r + 2
+			case int32:
+				_r = _r + 4
+			case int64:
+				_r = _r + 8
+			case int:
+				_r = _r + 8
+			case uint8:
+				_r = _r + 1
+			case uint16:
+				_r = _r + 2
+			case uint32:
+				_r = _r + 4
+			case uint64:
+				_r = _r + 8
+			case float32:
+				_r = _r + 4
+			case float64:
+				_r = _r + 8
+			case []byte:
+				_r = _r + len(v.([]byte))
+			case complex64:
+				_r = _r + 4
+			case complex128:
+				_r = _r + 8
+			default:
+				_r = _r + 8
+			}
+		}
+	}
 	return
 }
 
