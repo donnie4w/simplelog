@@ -12,12 +12,12 @@
 
 ###### FORMAT_SHORTFILENAME|FORMAT_DATE|FORMAT_TIME   default format
 
-	only log content is printed(not formatted)	FORMAT_NANO	 e.g. SetFormat(FORMAT_NANO)
-	long file name and number of lines			FORMAT_LONGFILENAME		e.g.	/etc/log/logging_test.go:10	
+	only log content is printed(not formatted)	FORMAT_NANO	 	e.g. SetFormat(FORMAT_NANO)
+	long file name and number of lines		FORMAT_LONGFILENAME	e.g.	/etc/log/logging_test.go:10	
 	short file name and line number			FORMAT_SHORTFILENAME	e.g.  logging_test.go:10
-	to date				FORMAT_DATE		e.g.	2023/02/14
-	to the second				FORMAT_TIME		e.g.	01:33:27
-	to microseconds			FORMAT_MICROSECNDS		e.g.	01:33:27.123456
+	to date						FORMAT_DATE		e.g.	2023/02/14
+	to the second					FORMAT_TIME		e.g.	01:33:27
+	to microseconds					FORMAT_MICROSECNDS	e.g.	01:33:27.123456
 
 ##### printed result e.g.
 
