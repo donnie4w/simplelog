@@ -781,12 +781,12 @@ func output(flag _FORMAT, calldepth int, s []byte, levelname []byte) (buf *bytes
 	var file string
 	var line int
 	if flag&(FORMAT_SHORTFILENAME|FORMAT_LONGFILENAME) != 0 {
-		var ok bool
-		_, file, line, ok = runtime.Caller(calldepth)
-		if !ok {
-			file = "???"
-			line = 0
-		}
+		pcs := make([]uintptr, 1)
+		runtime.Callers(calldepth+1, pcs[:])
+		fs := runtime.CallersFrames(pcs)
+		f, _ := fs.Next()
+		file = f.File
+		line = f.Line
 	}
 	buf = bufferpool.Get(len(s) + formatHeaderLength(now, file, line, flag, levelname))
 	formatHeader(buf, now, file, line, flag, levelname)
