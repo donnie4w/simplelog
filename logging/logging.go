@@ -430,7 +430,9 @@ func (this *Logging) println(_level _LEVEL, calldepth int, v ...interface{}) {
 					bs := fmt.Append([]byte{}, v...)
 					buf := getOutBuffer(bs, getlevelname(_level, this._format), this._format, k1(calldepth)+1)
 					this._fileObj.write2file(buf.Bytes())
-					bufferpool.Put(buf)
+					if buf.Len() < 1<<14 {
+						bufferpool.Put(buf)
+					}
 				} else {
 					bs := make([]byte, 0)
 					this._fileObj.write2file(fmt.Appendln(bs, v...))
@@ -654,7 +656,9 @@ func _console(s []byte, levelname []byte, flag _FORMAT, calldepth int) {
 	if flag != FORMAT_NANO {
 		buf := getOutBuffer(s, levelname, flag, k1(calldepth))
 		fmt.Print(string(buf.Bytes()))
-		bufferpool.Put(buf)
+		if buf.Len() < 1<<14 {
+			bufferpool.Put(buf)
+		}
 	} else {
 		fmt.Println(string(s))
 	}
