@@ -1,6 +1,9 @@
 package logging
 
 import (
+	"log/slog"
+	"path/filepath"
+	"strconv"
 	"testing"
 	"time"
 )
@@ -9,7 +12,7 @@ func Test_Log(t *testing.T) {
 	SetRollingDaily(`D:\cfoldTest`, "log2.txt")
 	//控制台打印
 	// SetConsole(false)
-	Debug("00000000000") //默认格式：[DEBUG]2023/07/10 18:40:49 logging_test.go:12: 00000000000
+	Debug("0000000000") //默认格式：[DEBUG]2023/07/10 18:40:49 logging_test.go:12: 00000000000
 
 	SetFormat(FORMAT_NANO) //设置格式(无格式化)：111111111111
 	Debug("111111111111")
@@ -84,4 +87,22 @@ func TestTimeLog(b *testing.T) {
 		Error(i, ">>>dddddddddddddddddddddddddddddddddddd")
 		Fatal(i, ">>>eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee")
 	}
+}
+
+func TestSlog(t *testing.T) {
+	replace := func(groups []string, a slog.Attr) slog.Attr {
+		if a.Key == slog.SourceKey {
+			source := a.Value.Any().(*slog.Source)
+			source.File = filepath.Base(source.File)
+		}
+		return a
+	}
+	loggingFile := NewLogger()
+	loggingFile.SetRollingFile("./1", "slogfile.txt", 100, KB)
+	h := slog.NewJSONHandler(loggingFile, &slog.HandlerOptions{AddSource: true, ReplaceAttr: replace})
+	log := slog.New(h)
+	for i := 0; i < 1000; i++ {
+		log.Info(">>>aaaaaaaaaaaaaaaaaaaaaaa:" + strconv.Itoa(i))
+	}
+
 }
