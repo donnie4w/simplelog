@@ -1,6 +1,7 @@
 package logging
 
 import (
+	"fmt"
 	"log/slog"
 	"path/filepath"
 	"strconv"
@@ -9,27 +10,21 @@ import (
 )
 
 func Test_Log(t *testing.T) {
-	SetRollingDaily(`D:\cfoldTest`, "log2.txt")
+	SetRollingDaily(``, "log2.txt")
 	//控制台打印
-	// SetConsole(false)
-	Debug("0000000000") //默认格式：[DEBUG]2023/07/10 18:40:49 logging_test.go:12: 00000000000
-
+	//SetConsole(false)
+	Debug("0000000000")    //默认格式：[DEBUG]2023/07/10 18:40:49 logging_test.go:12: 00000000000
 	SetFormat(FORMAT_NANO) //设置格式(无格式化)：111111111111
-	Debug("111111111111")
-
+	Debug("11111111111")
 	SetFormat(FORMAT_LONGFILENAME) //设置格式(长文件路径) ：[INFO]d:/github.com/simplelog/logging/logging_test.go:14: 22222222
 	Info("22222222")
-
 	SetFormat(FORMAT_DATE | FORMAT_SHORTFILENAME) //设置格式(日期+短文件路径) ：[WARN]2023/07/10 logging_test.go:16: 333333333
 	Warn("333333333")
-
 	SetFormat(FORMAT_DATE | FORMAT_TIME) //设置格式 ：[ERROR]2023/07/10 18:35:19 444444444
-	// SetLevel(FATAL) //设置为FATAL后，下面Error()级别小于FATAL,将不打印出来
+	SetLevel(LEVEL_FATAL)                //设置为FATAL后，下面Error()级别小于FATAL,将不打印出来
 	Error("444444444")
-
 	SetFormat(FORMAT_SHORTFILENAME) //设置格式 ：[FATAL]logging_test.go:21: 5555555555
 	Fatal("5555555555")
-
 	SetFormat(FORMAT_TIME) //设置格式 ：[FATAL]18:35:19 66666666666
 	Fatal("66666666666")
 }
@@ -42,7 +37,7 @@ func Test_LogOne(t *testing.T) {
 	log := NewLogger()
 	/*按日期分割日志文件，也是默认设置值*/
 	// log.SetRollingDaily(`D:\cfoldTest`, "log.txt")
-	log.SetRollingByTime(`D:\cfoldTest`, "log.txt", MODE_HOUR)
+	log.SetRollingByTime(``, "log.txt", MODE_HOUR)
 	/*按日志文件大小分割日志文件*/
 	// log.SetRollingFile("", "log1.txt", 3, KB)
 	// log.SetRollingFileLoop(`D:\cfoldTest`, "log1.txt", 3, KB, 5)
@@ -80,7 +75,16 @@ func TestTimeLog(b *testing.T) {
 	SetRollingByTime(`D:\cfoldTest`, "log.txt", MODE_DAY)
 	SetGzipOn(true)
 	SetConsole(true)
-	for i := 0; i < 1000; i++ {
+	for i := 0; i < 5; i++ {
+		Debug(i, ">>>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+		Info(i, ">>>bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb")
+		Warn(i, ">>>cccccccccccccccccccccccccccccccccccc")
+		Error(i, ">>>dddddddddddddddddddddddddddddddddddd")
+		Fatal(i, ">>>eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee")
+	}
+	_, err := SetRollingByTime(`D:\cfoldTest`, "log2.txt", MODE_DAY)
+	fmt.Println("err:", err)
+	for i := 0; i < 10; i++ {
 		Debug(i, ">>>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 		Info(i, ">>>bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb")
 		Warn(i, ">>>cccccccccccccccccccccccccccccccccccc")
@@ -104,5 +108,29 @@ func TestSlog(t *testing.T) {
 	for i := 0; i < 1000; i++ {
 		log.Info(">>>aaaaaaaaaaaaaaaaaaaaaaa:" + strconv.Itoa(i))
 	}
+}
 
+func TestOptionSingle(t *testing.T) {
+	SetOption(&Option{Level: LEVEL_DEBUG, Formatter: "{message} | {level}{time} {file}\n", Console: true, FileOption: &FileTimeMode{Filename: "testlogtime.log", Maxbuckup: 3, IsCompress: true, Timemode: MODE_DAY}})
+	for i := 0; i < 10; i++ {
+		Debug("bbbbbbbbbb", 222222222)
+		time.Sleep(1 * time.Second)
+	}
+}
+
+func TestOption4time(t *testing.T) {
+	SetOption(&Option{Level: LEVEL_INFO, Console: true, FileOption: &FileTimeMode{Filename: "testlogtime.log", Maxbuckup: 3, IsCompress: true, Timemode: MODE_DAY}})
+	for i := 0; i < 10; i++ {
+		Debug("aaaaaaaaaa", 1111111111111111111)
+		Info("bbbbbbbbbb", 2222222222222222222)
+		time.Sleep(2 * time.Second)
+	}
+}
+
+func TestOption4size(t *testing.T) {
+	SetOption(&Option{Level: LEVEL_DEBUG, Console: true, FileOption: &FileSizeMode{Filename: "testlog_1", Maxsize: 500, Maxbuckup: 3, IsCompress: true}})
+	for i := 0; i < 20; i++ {
+		Debug("bbbbbbbbbb", 222222222)
+		time.Sleep(100 * time.Millisecond)
+	}
 }
