@@ -4,7 +4,7 @@
 
 #### Log level printing：
 
-######  Debug()，Info()，Warn(), Error() ,Fatal()  
+######  Debug()，Info()，Warn(), Error() ,Fatal()
 
 ## Set the log print format：
 
@@ -40,7 +40,7 @@
 	
 	when:	SetLevel(OFF) 
 	All logs will not be printed
-		
+
 
 #### If logs need to be written to a file, set the log file
 
@@ -87,11 +87,40 @@
 	log.SetRollingFileLoop(`d:/foldTest`, "log.txt", 300, MB, 50) 
 	Set the file size to a maximum of 300 MB and reserve only the latest 50 log files
 
+
+#### FileOption
+
+###### FileOption is an interface. There are two implementation objects FileSizeMode and FileTimeMode
+
+###### FileTimeMode
+
+	Filename   path of Log file 
+	Timemode   slice by the hour, the day, the month：MODE_HOUR，MODE_DAY，MODE_MONTH
+	Maxbuckup  Maximum number of backup log files
+	IsCompress  Whether backup files are compressed
+
+###### FileSizeMode
+
+	Filename   path of Log file 
+	Maxsize    The maximum log file size. If the log file size exceeds the maximum, the log file will be backed up
+	Maxbuckup  Maximum number of backup log files
+	IsCompress  Whether backup files are compressed
+
+##### SetOption Example 1
+
+	SetOption(&Option{Level: LEVEL_DEBUG, Console: false, FileOption: &FileTimeMode{Filename: "testlogtime.log", Maxbuckup: 10, IsCompress: true, Timemode: MODE_DAY}})
+
+##### SetOption Example 2
+
+	SetOption(&Option{Level: LEVEL_DEBUG, Console: false, FileOption: &FileSizeMode{Filename: "testlog.log", Maxsize: 1<<30, Maxbuckup: 10, IsCompress: true}})
+
+------------
+
 #### Console log Settings
 
 	SetConsole(on bool)  default:true
 
-***
+------------
 
 ### Example：
 
