@@ -2,6 +2,7 @@ package logging
 
 import (
 	"testing"
+	"time"
 )
 
 func BenchmarkSerialLog(b *testing.B) {
@@ -34,4 +35,28 @@ func BenchmarkParallelLog(b *testing.B) {
 			// log.Fatal(i, "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee")
 		}
 	})
+}
+
+func BenchmarkSerialLogger(b *testing.B) {
+	b.StopTimer()
+	log, _ := NewLogger().SetConsole(false).SetRollingFile(`D:\cfoldTest\`, `golog.txt`, 1, GB)
+	// log.SetFormat(FORMAT_DATE | FORMAT_TIME | FORMAT_MICROSECNDS)
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		log.Debug(">>>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+	}
+}
+
+func BenchmarkParallelLogger(b *testing.B) {
+	log, _ := NewLogger().SetConsole(false).SetRollingFile(`D:\cfoldTest\`, `golog.txt`, 1, GB)
+	// log.SetFormat(FORMAT_DATE | FORMAT_TIME | FORMAT_MICROSECNDS)
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			log.Debug(">>>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+		}
+	})
+}
+
+func BenchmarkParallelSleep(b *testing.B) {
+	<-time.After(70 * time.Second)
 }
