@@ -27,7 +27,7 @@ import (
 )
 
 const (
-	VERSION string = "0.0.3"
+	VERSION string = "0.0.4"
 )
 
 type _LEVEL int8
